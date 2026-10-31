@@ -1,18 +1,22 @@
 name: Android APK
 on:
   workflow_dispatch:
-  push:
-    paths: ["android/**"]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Zip'ni ochish
+        run: |
+          test -f shashka_android.zip || { echo "shashka_android.zip repoda topilmadi"; exit 1; }
+          unzip -q -o shashka_android.zip -d proj
+          ls proj proj/android
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: "17"
       - name: Dvigatelni ARM64 uchun yasash
+        working-directory: proj
         run: |
           NDK="${ANDROID_NDK_HOME:-$ANDROID_NDK_LATEST_HOME}"
           echo "NDK: $NDK"
@@ -24,9 +28,9 @@ jobs:
         with:
           gradle-version: "8.7"
       - name: APK yasash
-        working-directory: android
+        working-directory: proj/android
         run: gradle assembleDebug --no-daemon --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: shashka-bot-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: proj/android/app/build/outputs/apk/debug/app-debug.apk
